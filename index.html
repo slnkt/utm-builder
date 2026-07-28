@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bioniq — генератор UTM-ссылок</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#1098D4;
+    --blue-light:#63BCE3;
+    --dark:#05131A;
+    --bg-light:#EDF8FC;
+    --error:#d10714;
+    --white:#ffffff;
+    --line:#d7e6ee;
+    --grad:linear-gradient(135deg,#1098D4 0%,#63BCE3 100%);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Montserrat",Arial,Helvetica,sans-serif;
+    font-size:14px;
+    color:var(--dark);
+    background:var(--bg-light);
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    justify-content:center;
+    padding:40px 16px 64px;
+    min-height:100vh;
+  }
+  .wrap{width:100%;max-width:560px}
+
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+  .brand .mark{
+    width:34px;height:34px;border-radius:9px;background:var(--grad);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:700;font-size:16px;letter-spacing:-.5px;
+  }
+  .brand .word{font-weight:600;font-size:19px;color:var(--dark);letter-spacing:-.3px}
+
+  .card{
+    background:var(--white);
+    border-radius:22px;
+    padding:32px 30px;
+    box-shadow:0 10px 40px rgba(16,152,212,.10);
+  }
+  h1{font-size:22px;font-weight:600;margin:0 0 6px;letter-spacing:-.3px}
+  .sub{font-size:13px;color:#5b6b73;margin:0 0 26px;line-height:1.5}
+
+  .field{margin-bottom:18px}
+  label.lbl{display:block;font-size:12.5px;font-weight:600;margin-bottom:7px;color:var(--dark)}
+  label.lbl .opt{font-weight:500;color:#8a99a0}
+
+  input[type=text],select,textarea{
+    width:100%;
+    font-family:inherit;font-size:14px;color:var(--dark);
+    background:var(--white);
+    border:1.5px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  input[type=text]::placeholder{color:#9fb0b8}
+  input[type=text]:focus,select:focus,textarea:focus{
+    border-color:var(--blue);
+    box-shadow:0 0 0 3px rgba(16,152,212,.14);
+  }
+  select{
+    appearance:none;-webkit-appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%231098D4' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat;background-position:right 14px center;padding-right:40px;
+  }
+  input.locked{background:var(--bg-light);color:#5b6b73;cursor:default;border-color:var(--line)}
+  input.invalid{border-color:var(--error)}
+  .err{display:none;color:var(--error);font-size:12px;margin-top:6px;font-weight:500}
+  .err.show{display:block}
+
+  .warn{
+    display:flex;gap:10px;align-items:flex-start;
+    background:var(--bg-light);
+    border-radius:12px;
+    padding:11px 13px;margin-bottom:10px;
+    font-size:12.5px;line-height:1.45;color:var(--dark);
+  }
+  .warn svg{flex:0 0 auto;margin-top:1px}
+
+  .btn{
+    width:100%;font-family:inherit;font-weight:600;font-size:15px;
+    border:none;border-radius:13px;padding:14px 18px;cursor:pointer;
+    transition:transform .05s, box-shadow .15s, background .15s;
+  }
+  .btn-primary{background:var(--grad);color:#fff;box-shadow:0 6px 18px rgba(16,152,212,.28)}
+  .btn-primary:hover{box-shadow:0 8px 22px rgba(16,152,212,.38)}
+  .btn-primary:active{transform:translateY(1px)}
+
+  .result{margin-top:26px}
+  .result textarea{
+    background:var(--bg-light);border-color:var(--bg-light);
+    min-height:78px;resize:vertical;line-height:1.5;word-break:break-all;
+    font-size:13.5px;
+  }
+  .result-row{display:flex;gap:10px;margin-top:10px}
+  .btn-copy{
+    flex:1;background:#fff;color:var(--dark);border:1.5px solid var(--blue);
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .btn-copy:hover{background:var(--bg-light)}
+  .btn-copy svg{stroke:var(--blue)}
+  .btn-copy.done{border-color:var(--blue);background:var(--bg-light)}
+
+  .hint{font-size:11.5px;color:#8a99a0;margin-top:7px;line-height:1.4}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <div class="mark">B</div>
+      <div class="word">bioniq</div>
+    </div>
+
+    <div class="card">
+      <h1>Генератор UTM-ссылок</h1>
+      <p class="sub">Собери ссылку с UTM-метками и промокодом. Значения — из списков, чтобы без опечаток и дублей.</p>
+
+      <div class="field">
+        <label class="lbl" for="url">URL страницы</label>
+        <input type="text" id="url" placeholder="https://bioniq.ru/checkups/132" autocomplete="off" spellcheck="false">
+        <div class="err" id="err-url">Укажи URL страницы</div>
+        <div class="hint" id="url-note" style="display:none">Хвост после «?» отброшен — метки собираются с нуля.</div>
+      </div>
+
+      <div class="field">
+        <label class="lbl" for="source">Источник — utm_source</label>
+        <select id="source">
+          <option value="vk">vk</option>
+          <option value="tg">tg</option>
+          <option value="inst">inst</option>
+          <option value="max">max</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="lbl" for="medium">Канал — utm_medium</label>
+        <input type="text" id="medium" class="locked" value="social" readonly tabindex="-1">
+      </div>
+
+      <div class="field">
+        <label class="lbl" for="blogger">Блогер</label>
+        <input type="text" id="blogger" placeholder="Имя блогера" autocomplete="off" spellcheck="false">
+        <div class="hint">В utm_campaign уйдёт как <b>integration_&lt;значение&gt;</b>. Нижний регистр, пробелы и точки → «_», кириллица — латиницей.</div>
+        <div class="err" id="err-blogger">Укажи блогера</div>
+      </div>
+
+      <div class="field">
+        <label class="lbl" for="content">Формат — utm_content</label>
+        <select id="content">
+          <option value="post">post</option>
+          <option value="stories">stories</option>
+          <option value="vk_clip">vk_clip</option>
+          <option value="link_in_bio">link_in_bio</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="lbl" for="promo">Промокод <span class="opt">— необязательно</span></label>
+        <div class="warn">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1098D4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Промокод на /ordering/ — проверь применение скидки на живом переходе перед отправкой.</span>
+        </div>
+        <input type="text" id="promo" placeholder="Например, SALE20" autocomplete="off" spellcheck="false">
+      </div>
+
+      <button class="btn btn-primary" id="build">Собрать ссылку</button>
+
+      <div class="result">
+        <textarea id="output" readonly placeholder="Готовая ссылка появится здесь"></textarea>
+        <div class="result-row">
+          <button class="btn btn-copy" id="copy">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1098D4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span id="copy-label">Скопировать</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  var $ = function(id){ return document.getElementById(id); };
+  var urlEl = $('url'), sourceEl = $('source'), bloggerEl = $('blogger'),
+      contentEl = $('content'), promoEl = $('promo'), outputEl = $('output'),
+      errUrl = $('err-url'), errBlogger = $('err-blogger');
+  var built = false;
+
+  var TRANSLIT = {
+    'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z','и':'i',
+    'й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t',
+    'у':'u','ф':'f','х':'h','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'',
+    'э':'e','ю':'yu','я':'ya'
+  };
+  function normalizeBlogger(v){
+    return v.trim().toLowerCase()
+      .replace(/[а-яё]/g, function(c){ return TRANSLIT[c]; })
+      .replace(/[.\s]+/g,'_')
+      .replace(/[^a-z0-9_-]/g,'')   // всё лишнее из меток вон
+      .replace(/_+/g,'_')
+      .replace(/^_+|_+$/g,'');
+  }
+  // Хвост после «?» и «#» отбрасываем: порядок параметров задаётся здесь
+  function baseUrl(v){
+    return v.trim().split('#')[0].split('?')[0];
+  }
+
+  // Промокод — верхний регистр вживую
+  promoEl.addEventListener('input', function(){
+    var start = this.selectionStart, end = this.selectionEnd;
+    this.value = this.value.toUpperCase();
+    this.setSelectionRange(start, end);
+    if(built) build();
+  });
+  // Блогер — нормализуем при уходе с поля, чтобы видеть результат
+  bloggerEl.addEventListener('blur', function(){
+    if(this.value.trim()) this.value = normalizeBlogger(this.value);
+  });
+  // После первой сборки — пересобираем при любых правках, чтобы ссылка не устаревала
+  [urlEl, sourceEl, bloggerEl, contentEl].forEach(function(el){
+    el.addEventListener('input', function(){ if(built) build(); });
+    el.addEventListener('change', function(){ if(built) build(); });
+  });
+
+  function build(){
+    var raw = urlEl.value.trim();
+    var url = baseUrl(raw);
+    var blogger = normalizeBlogger(bloggerEl.value);
+    var ok = true;
+
+    $('url-note').style.display = (url && url !== raw) ? 'block' : 'none';
+
+    if(!url){ errUrl.classList.add('show'); urlEl.classList.add('invalid'); ok = false; }
+    else { errUrl.classList.remove('show'); urlEl.classList.remove('invalid'); }
+
+    if(!blogger){ errBlogger.classList.add('show'); bloggerEl.classList.add('invalid'); ok = false; }
+    else { errBlogger.classList.remove('show'); bloggerEl.classList.remove('invalid'); }
+
+    if(!ok){ outputEl.value = ''; built = false; return; }
+
+    var promo = promoEl.value.trim().toUpperCase();
+    var params = [];
+    if(promo) params.push('promo=' + promo);
+    params.push('utm_source=' + sourceEl.value);
+    params.push('utm_medium=social');
+    params.push('utm_campaign=integration_' + blogger);
+    params.push('utm_content=' + contentEl.value);
+
+    outputEl.value = url + '?' + params.join('&');
+    built = true;
+  }
+
+  $('build').addEventListener('click', build);
+
+  var copyBtn = $('copy'), copyLabel = $('copy-label'), copyTimer = null;
+  copyBtn.addEventListener('click', function(){
+    var text = outputEl.value;
+    if(!text) return;
+    function done(){
+      copyBtn.classList.add('done');
+      copyLabel.textContent = 'Скопировано';
+      clearTimeout(copyTimer);
+      copyTimer = setTimeout(function(){
+        copyBtn.classList.remove('done');
+        copyLabel.textContent = 'Скопировать';
+      }, 1600);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){
+        outputEl.select(); document.execCommand('copy'); done();
+      });
+    } else {
+      outputEl.select(); document.execCommand('copy'); done();
+    }
+  });
+</script>
+</body>
+</html>
