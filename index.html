@@ -117,11 +117,6 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="brand">
-      <div class="mark">B</div>
-      <div class="word">bioniq</div>
-    </div>
-
     <div class="card">
       <h1>Генератор UTM-ссылок</h1>
       <p class="sub">Собери ссылку с UTM-метками и промокодом. Значения — из списков, чтобы без опечаток и дублей.</p>
@@ -149,10 +144,10 @@
       </div>
 
       <div class="field">
-        <label class="lbl" for="blogger">Блогер</label>
-        <input type="text" id="blogger" placeholder="Имя блогера" autocomplete="off" spellcheck="false">
-        <div class="hint">В utm_campaign уйдёт как <b>integration_&lt;значение&gt;</b>. Нижний регистр, пробелы и точки → «_», кириллица — латиницей.</div>
-        <div class="err" id="err-blogger">Укажи блогера</div>
+        <label class="lbl" for="blogger">Блогер <span class="opt">— ник канала</span></label>
+        <input type="text" id="blogger" placeholder="@nickname или ссылка на профиль" autocomplete="off" spellcheck="false">
+        <div class="hint" id="blogger-hint">Вставь ник или ссылку на профиль — «@», домен и лишние символы уберём сами.</div>
+        <div class="err" id="err-blogger">Укажи ник канала</div>
       </div>
 
       <div class="field">
@@ -202,7 +197,13 @@
     'э':'e','ю':'yu','я':'ya'
   };
   function normalizeBlogger(v){
-    return v.trim().toLowerCase()
+    var s = v.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'');
+    // вставили ссылку на профиль — берём из неё сам ник
+    if(s.indexOf('/') >= 0){
+      var parts = s.split('?')[0].split('#')[0].split('/').filter(Boolean);
+      if(parts.length > 1) s = parts[parts.length - 1];
+    }
+    return s.replace(/^@+/,'')
       .replace(/[а-яё]/g, function(c){ return TRANSLIT[c]; })
       .replace(/[.\s]+/g,'_')
       .replace(/[^a-z0-9_-]/g,'')   // всё лишнее из меток вон
@@ -221,9 +222,20 @@
     this.setSelectionRange(start, end);
     if(built) build();
   });
-  // Блогер — нормализуем при уходе с поля, чтобы видеть результат
+  // Блогер — очищаем при уходе с поля и показываем итоговую метку по ходу ввода
+  var bloggerHint = $('blogger-hint'), bloggerHintDefault = bloggerHint.textContent;
+  function updateBloggerHint(){
+    var n = normalizeBlogger(bloggerEl.value);
+    if(n){
+      bloggerHint.innerHTML = 'В ссылку уйдёт: <b>integration_' + n + '</b>';
+    } else {
+      bloggerHint.textContent = bloggerHintDefault;
+    }
+  }
+  bloggerEl.addEventListener('input', updateBloggerHint);
   bloggerEl.addEventListener('blur', function(){
     if(this.value.trim()) this.value = normalizeBlogger(this.value);
+    updateBloggerHint();
   });
   // После первой сборки — пересобираем при любых правках, чтобы ссылка не устаревала
   [urlEl, sourceEl, bloggerEl, contentEl].forEach(function(el){
